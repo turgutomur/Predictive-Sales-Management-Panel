@@ -1,69 +1,85 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+
 const API_BASE = 'http://localhost:8091/api/products';
 
 const ProductForm = ({ product, onSubmit }) => {
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [price, setPrice] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    price: ''
+  });
 
   useEffect(() => {
     if (product) {
-      setName(product.name);
-      setCategory(product.category);
-      setPrice(product.price);
+      setFormData({
+        name: product.name,
+        category: product.category,
+        price: product.price
+      });
     } else {
-      setName('');
-      setCategory('');
-      setPrice('');
+      setFormData({
+        name: '',
+        category: '',
+        price: ''
+      });
     }
   }, [product]);
 
-  const handleSubmit = async (e) => {
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
-
-    const newProduct = { name, category, price: parseFloat(price) };
-
     try {
       if (product) {
-        await axios.put(`http://localhost:8091/api/products/${product.id}`, newProduct);
+        await axios.put(`${API_BASE}/${product.id}`, formData);
       } else {
-        await axios.post('http://localhost:8091/api/products', newProduct);
+        await axios.post(API_BASE, formData);
       }
-      onSubmit();
-      setName('');
-      setCategory('');
-      setPrice('');
+      onSubmit(); // Listeyi yenile
     } catch (err) {
-      console.error(err);
+      console.error("Form gönderme hatası:", err);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{marginBottom: '20px'}}>
-      <input 
-        type="text" 
-        placeholder="İsim" 
-        value={name} 
-        onChange={e => setName(e.target.value)} 
-        required 
+    <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+      <h3>{product ? 'Ürünü Güncelle' : 'Yeni Ürün Ekle'}</h3>
+      <input
+        type="text"
+        name="name"
+        placeholder="İsim"
+        value={formData.name}
+        onChange={handleChange}
+        required
       />
-      <input 
-        type="text" 
-        placeholder="Kategori" 
-        value={category} 
-        onChange={e => setCategory(e.target.value)} 
-        required 
+      <input
+        type="text"
+        name="category"
+        placeholder="Kategori"
+        value={formData.category}
+        onChange={handleChange}
+        required
+        style={{ marginLeft: '10px' }}
       />
-      <input 
-        type="number" 
-        placeholder="Fiyat" 
-        value={price} 
-        onChange={e => setPrice(e.target.value)} 
-        required 
-        step="0.01"
+      <input
+        type="number"
+        name="price"
+        placeholder="Fiyat"
+        value={formData.price}
+        onChange={handleChange}
+        required
+        style={{ marginLeft: '10px' }}
       />
-      <button type="submit">{product ? 'Güncelle' : 'Ekle'}</button>
+      <button type="submit" style={{ marginLeft: '10px' }}>
+        {product ? 'Güncelle' : 'Ekle'}
+      </button>
     </form>
   );
 };
